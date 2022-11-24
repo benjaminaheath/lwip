@@ -1,27 +1,21 @@
 {
     "configurations": [
         {
-            "name": "Linux",
+            "name": "Win32",
             "includePath": [
-                "${workspaceFolder}/src/include",
-                "${workspaceFolder}/contrib",
-                "${workspaceFolder}/contrib/examples/example_app",
-                "${workspaceFolder}/contrib/ports/unix/port/include",
-                "${workspaceFolder}/contrib/ports/unix/example_app"
+                "${workspaceFolder}/**",
+                "${workspaceFolder}/../**"
             ],
-            "defines": [],
-            "intelliSenseMode": "gcc-x64",
-            "browse": {
-                "path": [
-                    "${workspaceFolder}/**"
-                ],
-                "limitSymbolsToIncludedHeaders": true,
-                "databaseFilename": ""
-            },
-            "compilerPath": "/usr/bin/gcc",
-            "cStandard": "c11",
+            "defines": [
+                "_DEBUG",
+                "UNICODE",
+                "_UNICODE"
+            ],
+            "windowsSdkVersion": "10.0.17763.0",
+            "compilerPath": "C:/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/VC/Tools/MSVC/14.21.27702/bin/Hostx64/x64/cl.exe",
+            "cStandard": "c17",
             "cppStandard": "c++17",
-            "configurationProvider": "vector-of-bool.cmake-tools"
+            "intelliSenseMode": "windows-msvc-x64"
         }
     ],
     "version": 4
