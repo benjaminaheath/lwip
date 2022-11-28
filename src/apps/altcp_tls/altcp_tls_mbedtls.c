@@ -68,7 +68,6 @@
 /* @todo: which includes are really needed? */
 #include "mbedtls/entropy.h"
 #include "mbedtls/ctr_drbg.h"
-// #include "mbedtls/certs.h"
 #include "mbedtls/x509.h"
 #include "mbedtls/ssl.h"
 #include "mbedtls/net_sockets.h"
@@ -79,9 +78,8 @@
 #include "mbedtls/ssl_cache.h"
 #include "mbedtls/ssl_ticket.h"
 
-// #include "mbedtls/ssl_internal.h" /* to call mbedtls_flush_output after ERR_MEM */
-// #include "mbedtls/library/ssl_misc.h" //*************
-#include "../../../../../VSARM/sdk/pico/pico-sdk/lib/mbedtls/library/ssl_misc.h"
+//#include "/home/tom/Documents/pico/pico-sdk/lib/mbedtls/library/ssl_misc.h" /* to call mbedtls_flush_output after ERR_MEM */
+
 #include <string.h>
 
 #ifndef ALTCP_MBEDTLS_ENTROPY_PTR
@@ -523,7 +521,7 @@ altcp_mbedtls_lower_sent(void *arg, struct altcp_pcb *inner_conn, u16_t len)
     LWIP_ASSERT("state", state != NULL);
     LWIP_ASSERT("pcb mismatch", conn->inner_conn == inner_conn);
     /* calculate TLS overhead part to not send it to application */
-    overhead = state->overhead_bytes_adjust + state->ssl_context.private_out_left;
+    overhead = state->overhead_bytes_adjust + state->ssl_context.MBEDTLS_PRIVATE(out_left);
     if ((unsigned)overhead > len) {
       overhead = len;
     }
@@ -531,7 +529,6 @@ altcp_mbedtls_lower_sent(void *arg, struct altcp_pcb *inner_conn, u16_t len)
     state->overhead_bytes_adjust -= len;
     /* try to send more if we failed before (may increase overhead adjust counter) */
     mbedtls_ssl_flush_output(&state->ssl_context);
-    // mbedtls_ssl_flush_output(&state->ssl_context);
     /* remove calculated overhead from ACKed bytes len */
     app_len = len - (u16_t)overhead;
     /* update application write counter and inform application */
@@ -683,7 +680,7 @@ altcp_tls_set_session(struct altcp_pcb *conn, struct altcp_tls_session *session)
   if (session && conn && conn->state) {
     altcp_mbedtls_state_t *state = (altcp_mbedtls_state_t *)conn->state;
     int ret = -1;
-    if (session->data.private_start)
+    if (session->data.MBEDTLS_PRIVATE(start))
       ret = mbedtls_ssl_set_session(&state->ssl_context, &session->data);
     return ret < 0 ? ERR_VAL : ERR_OK;
   }
@@ -781,10 +778,10 @@ altcp_tls_create_config(int is_server, u8_t cert_count, u8_t pkey_count, int hav
       ("altcp_tls: TCP_WND is smaller than the RX decrypion buffer, connection RX might stall!\n"));
   }
 
-  // if (TCP_WND < MBEDTLS_SSL_OUT_CONTENT_LEN) {
-  //   LWIP_DEBUGF(ALTCP_MBEDTLS_DEBUG|LWIP_DBG_LEVEL_SERIOUS,
-  //     ("altcp_tls: TCP_WND is smaller than the RX decrypion buffer, connection RX might stall!\n"));
-  // }
+  if (TCP_WND < MBEDTLS_SSL_OUT_CONTENT_LEN) {
+    LWIP_DEBUGF(ALTCP_MBEDTLS_DEBUG|LWIP_DBG_LEVEL_SERIOUS,
+      ("altcp_tls: TCP_WND is smaller than the TX decrypion buffer, connection TX might stall!\n"));
+  }
 
   altcp_mbedtls_mem_init();
 
@@ -1237,9 +1234,9 @@ altcp_mbedtls_write(struct altcp_pcb *conn, const void *dataptr, u16_t len, u8_t
   /* HACK: if there is something left to send, try to flush it and only
      allow sending more if this succeeded (this is a hack because neither
      returning 0 nor MBEDTLS_ERR_SSL_WANT_WRITE worked for me) */
-  if (state->ssl_context.private_out_left) {
+  if (state->ssl_context.MBEDTLS_PRIVATE(out_left)) {
     mbedtls_ssl_flush_output(&state->ssl_context);
-    if (state->ssl_context.private_out_left) {
+    if (state->ssl_context.MBEDTLS_PRIVATE(out_left)) {
       return ERR_MEM;
     }
   }
